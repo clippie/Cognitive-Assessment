@@ -27,10 +27,8 @@ def upgrade() -> None:
     # DB-level enum types enforce the allowed values at the storage layer,
     # not just the application layer. This means even direct SQL inserts
     # (e.g., a future data-repair script) can't introduce invalid values.
-    op.execute("CREATE TYPE contexttag AS ENUM ('morning', 'pre_work', 'post_work', 'pre_sleep', 'other')")
-    op.execute("CREATE TYPE tasktype AS ENUM ('pvt', 'nback', 'stroop')")
-    op.execute("CREATE TYPE errortype AS ENUM ('interference', 'random', 'none')")
-
+    # SQLAlchemy creates each enum type automatically on first use in create_table —
+    # we do NOT create them manually here to avoid the double-creation error.
     op.create_table(
         "sessions",
         sa.Column("session_id", postgresql.UUID(as_uuid=True), primary_key=True),

@@ -1,9 +1,15 @@
 import os
+import sys
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
+
+# Make the backend/ directory importable so `from app.x import y` works
+# when Alembic is invoked from within the backend/ folder.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 load_dotenv()
 

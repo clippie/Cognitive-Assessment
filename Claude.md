@@ -12,7 +12,26 @@ This is a portfolio project. Code quality, clear commit history, and defensible 
 
 ## Current phase
 
-**Phase 1: Database + minimal ingestion.** Goal: real schema, real data flowing, as early as possible — not a placeholder format we'll migrate away from later. See `Project_Management.md` roadmap for the full phase sequence; we are intentionally moving DB setup and minimal logger in parallel, not building the full backend before collecting anything.
+**Phase 1: Database + minimal ingestion** — in progress.
+
+### Completed
+- SQLAlchemy models (`backend/app/models.py`) — `Session` and `Trial` with DB-level enum types, check constraints, and cascade delete.
+- Alembic initialized with first migration (`backend/alembic/versions/0001_initial_schema.py`) — creates both tables and enables the `pgvector` extension.
+- Pydantic schemas (`backend/app/schemas.py`) — request validation mirrors DB constraints so invalid payloads fail fast with a 422 before hitting the DB.
+- FastAPI app (`backend/app/main.py`) — single `POST /sessions` endpoint that inserts a session and all its trials atomically.
+
+### Next steps (Phase 1 remaining)
+- [ ] Connect to Supabase dev DB and run `alembic upgrade head` to apply the migration.
+- [ ] Verify schema in Supabase dashboard — confirm tables, enums, and constraints are present.
+- [ ] Build minimal React PVT task page (client-side `performance.now()` timing) that POSTs to `/sessions`.
+- [ ] Begin collecting real data (3-4x/day personal sessions).
+
+### Phase 2 (not started)
+- N-back and Stroop task implementations in the frontend.
+- User auth (after initial self-testing data collection is underway).
+- Feature engineering pipeline (aggregate trial-level features per session for model input).
+
+See `Project_Management.md` for the full phase roadmap.
 
 ## Tech stack (decided, don't change without discussion)
 
@@ -59,13 +78,11 @@ Design intent behind constraints (context for why, not just what):
 
 ## Immediate task for this session
 
-Set up the database layer:
-1. SQLAlchemy models matching the schema above (`sessions`, `trials`), with proper enum/constraint definitions.
-2. Initialize Alembic, generate the first migration from these models.
-3. Enable the `pgvector` extension in the migration (unused for now, reserved for the RAG phase).
-4. A minimal FastAPI POST endpoint to insert a session + its trials, sufficient to support a bare-bones PVT-only logging page (no auth yet — single-user, self-testing phase).
+Build the minimal React PVT task page that POSTs trial data to the backend. No auth, no polish — just enough to start collecting real data.
 
-Do not build out the full task battery (N-back, Stroop), frontend polish, auth, modeling, or LLM/RAG code yet — those are later phases per `Project_Management.md`. Keep this session scoped to DB + minimal ingestion.
+- Client-side `performance.now()` timing (never server round-trip — see data model rationale).
+- Submit a completed PVT session to `POST /sessions`.
+- Keep the UI functional, not pretty — styling comes later.
 
 ## Conventions
 

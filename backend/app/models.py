@@ -49,7 +49,9 @@ class Session(Base):
     # Server-assigned timestamp: prevents client-side clock drift or manipulation
     # from corrupting the session ordering that the model will rely on.
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    context_tag: Mapped[ContextTag] = mapped_column(SAEnum(ContextTag, name="contexttag"), nullable=False)
+    # values_callable tells SQLAlchemy to use the enum's .value ('morning') not its .name ('MORNING')
+    # when communicating with the DB — the PostgreSQL enum was created with lowercase values.
+    context_tag: Mapped[ContextTag] = mapped_column(SAEnum(ContextTag, name="contexttag", values_callable=lambda e: [x.value for x in e]), nullable=False)
     kss_pre: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     kss_post: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     sleep_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -74,13 +76,13 @@ class Trial(Base):
         ForeignKey("sessions.session_id", ondelete="CASCADE"),
         nullable=False,
     )
-    task_type: Mapped[TaskType] = mapped_column(SAEnum(TaskType, name="tasktype"), nullable=False)
+    task_type: Mapped[TaskType] = mapped_column(SAEnum(TaskType, name="tasktype", values_callable=lambda e: [x.value for x in e]), nullable=False)
     trial_number: Mapped[int] = mapped_column(Integer, nullable=False)
     # Nullable to represent missed/lapse trials in PVT, where no response is given
     # and therefore no reaction time exists (not zero — absence of response is distinct from slow response).
     reaction_time_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     accuracy: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    error_type: Mapped[Optional[ErrorType]] = mapped_column(SAEnum(ErrorType, name="errortype"), nullable=True)
+    error_type: Mapped[Optional[ErrorType]] = mapped_column(SAEnum(ErrorType, name="errortype", values_callable=lambda e: [x.value for x in e]), nullable=True)
     # Reserved for Phase 3 response-dynamics features (mouse trajectory, keypress dwell time).
     # Stored as JSONB so the schema doesn't need to change when we start capturing it.
     raw_response: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
