@@ -1,0 +1,88 @@
+/* Deliberately minimal — CLAUDE.md: "functional, not pretty; styling comes later." */
+
+:root {
+  color-scheme: light dark;
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+button {
+  font: inherit;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+label {
+  display: block;
+  margin-bottom: 12px;
+}
+
+input,
+select {
+  display: block;
+  width: 100%;
+  font: inherit;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+
+.kss-rating {
+  border: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.kss-rating-options {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.kss-option {
+  width: 32px;
+}
+
+.kss-option.selected {
+  font-weight: bold;
+  outline: 2px solid currentColor;
+}
+
+.pvt-screen {
+  text-align: center;
+}
+
+.pvt-stimulus-area {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  border: 1px solid currentColor;
+  margin: 16px 0;
+}
+
+.pvt-counter {
+  font-variant-numeric: tabular-nums;
+}
+
+.pvt-waiting {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.pvt-feedback {
+  min-height: 1.5em;
+}
+
+.error-message {
+  color: #c0392b;
+}

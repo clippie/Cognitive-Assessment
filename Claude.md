@@ -18,12 +18,18 @@ This is a portfolio project. Code quality, clear commit history, and defensible 
 - SQLAlchemy models (`backend/app/models.py`) — `Session` and `Trial` with DB-level enum types, check constraints, and cascade delete.
 - Alembic initialized with first migration (`backend/alembic/versions/0001_initial_schema.py`) — creates both tables and enables the `pgvector` extension.
 - Pydantic schemas (`backend/app/schemas.py`) — request validation mirrors DB constraints so invalid payloads fail fast with a 422 before hitting the DB.
-- FastAPI app (`backend/app/main.py`) — single `POST /sessions` endpoint that inserts a session and all its trials atomically.
+- FastAPI app (`backend/app/main.py`) — single `POST /sessions` endpoint that inserts a session and all its trials atomically. CORS enabled via `CORS_ALLOWED_ORIGINS` env var so the Vite dev server (and later the deployed frontend) can call it.
+- React + TypeScript frontend (`frontend/`, Vite) — session setup form (user id, context tag, sleep hours, hours since waking, pre-KSS) → PVT task → post-KSS → submits the completed session to `POST /sessions`. Structure:
+  - `src/types/session.ts` — TS types mirroring `backend/app/schemas.py` exactly (kept in sync by hand, no shared codegen yet).
+  - `src/api/` — `client.ts` (fetch wrapper, `VITE_API_URL`-based) and `sessions.ts` (`submitSession`).
+  - `src/tasks/pvt/` — `pvtConfig.ts` (trial count / ISI / timeout constants, with the accuracy/error_type mapping rationale documented inline), `usePvtTask.ts` (state machine as a reducer: idle → isi → stimulus → finished), `PvtTask.tsx` (render + live ms counter).
+  - `src/components/` — `SessionSetupForm.tsx`, `KssRating.tsx` (reusable 1-9 scale), `SessionSubmit.tsx`.
+- End-to-end flow verified with a scripted Playwright run against the local dev servers: false start, non-response timeout, and 18 timed responses all recorded with correct `accuracy`/`error_type`/`reaction_time_ms`; session landed correctly in the dev DB; cascade delete re-verified by cleaning up the test session afterward.
 
 ### Next steps (Phase 1 remaining)
-- [ ] Connect to Supabase dev DB and run `alembic upgrade head` to apply the migration.
-- [ ] Verify schema in Supabase dashboard — confirm tables, enums, and constraints are present.
-- [ ] Build minimal React PVT task page (client-side `performance.now()` timing) that POSTs to `/sessions`.
+- [x] Connect to Supabase dev DB and run `alembic upgrade head` to apply the migration.
+- [x] Verify schema in Supabase dashboard — confirm tables, enums, and constraints are present.
+- [x] Build minimal React PVT task page (client-side `performance.now()` timing) that POSTs to `/sessions`.
 - [ ] Begin collecting real data (3-4x/day personal sessions).
 
 ### Phase 2 (not started)
@@ -78,11 +84,12 @@ Design intent behind constraints (context for why, not just what):
 
 ## Immediate task for this session
 
-Build the minimal React PVT task page that POSTs trial data to the backend. No auth, no polish — just enough to start collecting real data.
+React PVT page is built and verified end-to-end (see Completed, above). Remaining Phase 1 work is starting real 3-4x/day data collection: run the backend (`uvicorn app.main:app`) and frontend (`npm run dev` in `frontend/`) locally, or deploy, and start logging real sessions against the **prod** DB (swap `DATABASE_URL` — dev was used for all testing so far).
 
-- Client-side `performance.now()` timing (never server round-trip — see data model rationale).
-- Submit a completed PVT session to `POST /sessions`.
-- Keep the UI functional, not pretty — styling comes later.
+Non-obvious PVT protocol decisions made while building this (not fully specified in `Project_Management.md`, flagged per the policy above — review before trusting collected data, full rationale in `frontend/src/tasks/pvt/pvtConfig.ts`):
+- Fixed 20-trial count per session rather than a fixed wall-clock duration.
+- Random ISI 2-5s, 2s response timeout.
+- PVT is treated as a speed task, not correct/incorrect: any on-time response is `accuracy: true` regardless of how slow (a "lapse" lives in `reaction_time_ms`, not as an error). Only false starts (`error_type: "random"`) and non-responses (`error_type: "none"`) count as errors.
 
 ## Conventions
 

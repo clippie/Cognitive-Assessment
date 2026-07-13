@@ -1,4 +1,7 @@
+import os
+
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session as DBSession
 
 from app.database import get_db
@@ -6,6 +9,18 @@ from app.models import Session as SessionModel, Trial as TrialModel
 from app.schemas import SessionCreate, SessionResponse
 
 app = FastAPI(title="Cognitive Assessment API")
+
+# Comma-separated list of allowed frontend origins, e.g. the Vite dev server
+# or the deployed frontend URL. Kept out of source so dev/prod origins don't
+# need a code change to swap — see .env.example.
+_allowed_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_allowed_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/sessions", response_model=SessionResponse, status_code=201)
