@@ -41,7 +41,7 @@ See `Project_Management.md` for the full phase roadmap.
 
 ## Tech stack (decided, don't change without discussion)
 
-- **Frontend:** React, minimal/clean UI, client-side timing via `performance.now()` (not server round-trip — network jitter would contaminate reaction-time data)
+- **Frontend:** React + TypeScript, minimal/clean UI, client-side timing via `performance.now()` (not server round-trip — network jitter would contaminate reaction-time data)
 - **Backend:** FastAPI
 - **Database:** PostgreSQL via Supabase (free tier), with `pgvector` extension enabled from the start (even though RAG comes later — keeps migration history coherent)
 - **ORM / migrations:** SQLAlchemy models + Alembic migrations. No hand-run SQL against the live DB — every schema change is a versioned migration file.

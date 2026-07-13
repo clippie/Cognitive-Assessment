@@ -82,7 +82,7 @@ Simple regression / gradient boosting (XGBoost) predicting KSS score or context_
 - **Grounding/citation:** structured output includes a `source` field tying a specific claim to a specific abstract; surfaced in UI as a small "based on: [study]" footnote
 
 ## Tech Stack
-- **Frontend:** React, precise client-side timing, minimal/clean UI
+- **Frontend:** React + TypeScript, precise client-side timing, minimal/clean UI
 - **Backend:** FastAPI
 - **Database:** PostgreSQL
 - **Modeling:** PyTorch (training), ONNX export for lightweight inference serving (stretch goal)
@@ -94,4 +94,14 @@ Simple regression / gradient boosting (XGBoost) predicting KSS score or context_
 - Data-use disclosure for any user beyond the author
  
 ## Status / Decision Log
-- [ ] 
+
+### Phase 1 — database + minimal ingestion
+- [x] Database schema designed and migrated to dev Supabase: SQLAlchemy models + Alembic migration (`backend/alembic/versions/0001_initial_schema.py`). Verified live against Supabase: both tables, DB-level enums, check constraints (`kss_pre`/`kss_post` range, `error_type` tied to `accuracy = false`), FK cascade delete, and the `pgvector` extension are all present and working as designed.
+- [x] FastAPI backend (`backend/app/main.py`): single `POST /sessions` endpoint inserting a session and all its trials atomically. Pydantic schemas mirror the DB constraints so invalid payloads 422 before ever reaching the DB. CORS added (`CORS_ALLOWED_ORIGINS` env var) once the frontend needed to call it cross-origin from the Vite dev server.
+- [x] React + TypeScript frontend (`frontend/`, Vite) implementing the full PVT session flow: setup form (user id, context tag, sleep hours, hours since waking, pre-KSS) → PVT task → post-KSS → submit to `POST /sessions`. TypeScript was chosen over plain JS specifically to mirror the backend's "type hints throughout" convention — request/response types in `frontend/src/types/session.ts` are hand-mirrored from `backend/app/schemas.py` (no shared codegen yet, so these need to be kept in sync manually when the backend schema changes).
+- [x] PVT protocol parameters decided — not fully specified in this document's original draft, so recorded here for the record (full rationale as code comments in `frontend/src/tasks/pvt/pvtConfig.ts`):
+  - Fixed 20-trial session rather than a fixed wall-clock duration, so every session produces a same-length trial sequence; ISI (randomized 2-5s per trial) is the controlled variable, not total duration.
+  - 2s response timeout after stimulus onset before a trial counts as a non-response.
+  - PVT is modeled as a *speed* task, not a correct/incorrect task: any on-time response is `accuracy: true` no matter how slow — a "lapse" in PVT terms is read off `reaction_time_ms` downstream, not encoded as an error. Only two things count as an actual error: a false start (response before the stimulus appears, `error_type: "random"`) and a true non-response (`error_type: "none"`, mirroring the DB model's "incorrect trial, no further classification" semantics — PVT has no interference-error concept, that's Stroop-specific).
+- [x] End-to-end flow verified with a scripted headless-browser (Playwright) run against the local dev servers: deliberate false start, deliberate non-response timeout, and 18 timed responses all recorded with correct `accuracy`/`error_type`/`reaction_time_ms`; the resulting session round-tripped through the dev DB with correct values end to end; cascade delete re-confirmed by cleaning up the test session afterward (0 orphaned trials).
+- [ ] Begin real 3-4x/day self-testing data collection against the **prod** DB (all testing so far has used the dev DB — swap `DATABASE_URL` before starting real collection).
