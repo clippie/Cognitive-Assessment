@@ -4,9 +4,15 @@ import { ApiError } from "./api/client";
 import { SessionSetupForm, type SessionSetupValues } from "./components/SessionSetupForm";
 import { SessionSubmit } from "./components/SessionSubmit";
 import { PvtTask } from "./tasks/pvt/PvtTask";
+import { NbackTask } from "./tasks/nback/NbackTask";
+import { StroopTask } from "./tasks/stroop/StroopTask";
 import type { TrialCreate } from "./types/session";
 
-type Stage = "setup" | "task" | "submit";
+// Task order follows Project_Management.md's cognitive-tasks table (PVT,
+// N-back, Stroop). Each stage appends its own trials to `trials` rather than
+// each task managing a slice of session state itself, since the session as a
+// whole (not any one task) is the unit submitted to the backend.
+type Stage = "setup" | "pvt" | "nback" | "stroop" | "submit";
 type SubmitStatus = "idle" | "submitting" | "success" | "error";
 
 export default function App() {
@@ -18,11 +24,21 @@ export default function App() {
 
   function handleSetupSubmit(values: SessionSetupValues) {
     setSetupValues(values);
-    setStage("task");
+    setStage("pvt");
   }
 
-  function handleTaskComplete(completedTrials: TrialCreate[]) {
+  function handlePvtComplete(completedTrials: TrialCreate[]) {
     setTrials(completedTrials);
+    setStage("nback");
+  }
+
+  function handleNbackComplete(completedTrials: TrialCreate[]) {
+    setTrials((prev) => [...prev, ...completedTrials]);
+    setStage("stroop");
+  }
+
+  function handleStroopComplete(completedTrials: TrialCreate[]) {
+    setTrials((prev) => [...prev, ...completedTrials]);
     setStage("submit");
   }
 
@@ -51,7 +67,9 @@ export default function App() {
     <main className="app">
       <h1>Cognitive Assessment</h1>
       {stage === "setup" && <SessionSetupForm onSubmit={handleSetupSubmit} />}
-      {stage === "task" && <PvtTask onComplete={handleTaskComplete} />}
+      {stage === "pvt" && <PvtTask onComplete={handlePvtComplete} />}
+      {stage === "nback" && <NbackTask onComplete={handleNbackComplete} />}
+      {stage === "stroop" && <StroopTask onComplete={handleStroopComplete} />}
       {stage === "submit" && (
         <SessionSubmit onSubmit={handleFinalSubmit} status={submitStatus} errorMessage={submitError} />
       )}

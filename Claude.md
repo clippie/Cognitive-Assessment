@@ -25,15 +25,20 @@ This is a portfolio project. Code quality, clear commit history, and defensible 
   - `src/tasks/pvt/` — `pvtConfig.ts` (trial count / ISI / timeout constants, with the accuracy/error_type mapping rationale documented inline), `usePvtTask.ts` (state machine as a reducer: idle → isi → stimulus → finished), `PvtTask.tsx` (render + live ms counter).
   - `src/components/` — `SessionSetupForm.tsx`, `KssRating.tsx` (reusable 1-9 scale), `SessionSubmit.tsx`.
 - End-to-end flow verified with a scripted Playwright run against the local dev servers: false start, non-response timeout, and 18 timed responses all recorded with correct `accuracy`/`error_type`/`reaction_time_ms`; session landed correctly in the dev DB; cascade delete re-verified by cleaning up the test session afterward.
+- N-back frontend (`frontend/src/tasks/nback/`) — `nbackConfig.ts` (2-back, fixed SOA, letter-sequence generator with controlled target rate, rationale documented inline), `useNbackTask.ts` (state machine: idle → stimulus → blank → finished), `NbackTask.tsx`. Wired into `App.tsx` between PVT and the post-KSS/submit stage; trials from both tasks are merged before submit. Built *ahead of* real data collection — see Project_Management.md's Phase 2 decision log entry for why the phase order was reversed.
+- N-back end-to-end flow re-verified with a scripted Playwright run (PVT → N-back → submit) against an isolated backend/frontend pair pointed at the dev DB: 20 PVT + 36 N-back trials recorded correctly, test session cascade-deleted afterward.
+- Stroop frontend (`frontend/src/tasks/stroop/`) — `stroopConfig.ts` (4-color palette, arbitrary D/F/J/K response keys shown as an always-visible legend, congruent/incongruent sequence generator, rationale documented inline), `useStroopTask.ts` (state machine: idle → isi → stimulus → finished), `StroopTask.tsx`. Wired into `App.tsx` as the third task stage; this completes the three-task protocol.
+- Stroop end-to-end flow re-verified with two scripted Playwright runs against the same isolated dev-DB pair: one answering with the real ink color (100% accuracy, correct trial sequencing/constraints), one deliberately answering wrong every trial (confirmed both `"interference"` and `"random"` error_type branches fire correctly). Both test sessions cascade-deleted afterward.
 
 ### Next steps (Phase 1 remaining)
 - [x] Connect to Supabase dev DB and run `alembic upgrade head` to apply the migration.
 - [x] Verify schema in Supabase dashboard — confirm tables, enums, and constraints are present.
 - [x] Build minimal React PVT task page (client-side `performance.now()` timing) that POSTs to `/sessions`.
-- [ ] Begin collecting real data (3-4x/day personal sessions).
+- [ ] Begin collecting real data (3-4x/day personal sessions) — all three tasks are now built, so the first sessions collected will match the full protocol.
 
-### Phase 2 (not started)
-- N-back and Stroop task implementations in the frontend.
+### Phase 2 (frontend tasks done, started ahead of real data collection)
+- [x] N-back task implementation in the frontend.
+- [x] Stroop task implementation in the frontend.
 - User auth (after initial self-testing data collection is underway).
 - Feature engineering pipeline (aggregate trial-level features per session for model input).
 
@@ -84,12 +89,24 @@ Design intent behind constraints (context for why, not just what):
 
 ## Immediate task for this session
 
-React PVT page is built and verified end-to-end (see Completed, above). Remaining Phase 1 work is starting real 3-4x/day data collection: run the backend (`uvicorn app.main:app`) and frontend (`npm run dev` in `frontend/`) locally, or deploy, and start logging real sessions against the **prod** DB (swap `DATABASE_URL` — dev was used for all testing so far).
+All three tasks (PVT, N-back, Stroop) are built and verified end-to-end (see Completed, above). All of Phase 2's frontend work is done; the remaining Phase 1 item is starting real 3-4x/day data collection against the **prod** DB (swap `DATABASE_URL` — dev has been used for all testing so far). Run the backend (`uvicorn app.main:app`) and frontend (`npm run dev` in `frontend/`) locally, or deploy, and start logging real sessions.
 
 Non-obvious PVT protocol decisions made while building this (not fully specified in `Project_Management.md`, flagged per the policy above — review before trusting collected data, full rationale in `frontend/src/tasks/pvt/pvtConfig.ts`):
 - Fixed 20-trial count per session rather than a fixed wall-clock duration.
 - Random ISI 2-5s, 2s response timeout.
 - PVT is treated as a speed task, not correct/incorrect: any on-time response is `accuracy: true` regardless of how slow (a "lapse" lives in `reaction_time_ms`, not as an error). Only false starts (`error_type: "random"`) and non-responses (`error_type: "none"`) count as errors.
+
+Non-obvious N-back protocol decisions made while building this (full rationale in `frontend/src/tasks/nback/nbackConfig.ts`):
+- Fixed 2-back (not adaptive), fixed 2.5s SOA per trial, 36 trials, ~30% target rate, 8-consonant letter pool.
+- Two forced-choice response keys (F = match, J = no match) on every trial, rather than respond-only-on-match, so a non-response is unambiguously a timeout rather than a possibly-correct withhold.
+- The first 2 trials of a session can't be targets and are scored as ordinary trials with ground truth "no match".
+- `error_type`: wrong button → `"random"`, timeout → `"none"` (same convention as PVT; `"interference"` stays Stroop-only).
+
+Non-obvious Stroop protocol decisions made while building this (full rationale in `frontend/src/tasks/stroop/stroopConfig.ts`):
+- 4 colors, 50/50 congruent/incongruent trials randomly interleaved, no neutral condition, 40 trials/session.
+- Response keys (D/F/J/K) are arbitrary, not first-letter mnemonics, and shown as an always-visible legend — first-letter keys would let word-reading leak into the response itself, and an unmemorized arbitrary mapping would conflate "forgot the key" errors with real interference/random errors.
+- Fixed 500ms ISI (not randomized like PVT) — Stroop's signal is the congruent-vs-incongruent RT difference, which a predictable rhythm doesn't confound.
+- `error_type`: wrong color on an incongruent trial → `"interference"`, wrong color on a congruent trial → `"random"`, timeout → `"none"`. A keypress during the ISI is ignored (no false-start concept here).
 
 ## Conventions
 

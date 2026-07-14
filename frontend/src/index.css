@@ -86,3 +86,68 @@ select {
 .error-message {
   color: #c0392b;
 }
+
+.nback-screen {
+  text-align: center;
+}
+
+.nback-stimulus-area {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  font-weight: bold;
+  border: 1px solid currentColor;
+  margin: 16px 0;
+}
+
+.nback-feedback {
+  min-height: 1.5em;
+}
+
+.stroop-screen {
+  text-align: center;
+}
+
+.stroop-stimulus-area {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.stroop-word {
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.stroop-fixation {
+  font-size: 32px;
+  opacity: 0.6;
+}
+
+.stroop-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.stroop-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stroop-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.stroop-feedback {
+  min-height: 1.5em;
+}
