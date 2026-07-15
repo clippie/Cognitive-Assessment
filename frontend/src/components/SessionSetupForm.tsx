@@ -62,6 +62,7 @@ export function SessionSetupForm({ onSubmit }: SessionSetupFormProps) {
         <input
           type="number"
           min="0"
+          max="24"
           step="0.5"
           value={sleepHours}
           onChange={(e) => setSleepHours(e.target.value)}
@@ -73,6 +74,7 @@ export function SessionSetupForm({ onSubmit }: SessionSetupFormProps) {
         <input
           type="number"
           min="0"
+          max="24"
           step="0.5"
           value={hoursSinceWaking}
           onChange={(e) => setHoursSinceWaking(e.target.value)}

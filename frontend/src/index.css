@@ -96,10 +96,46 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 64px;
+  font-size: 36px;
   font-weight: bold;
+  letter-spacing: 1px;
   border: 1px solid currentColor;
   margin: 16px 0;
+}
+
+.nback-timer-track {
+  height: 8px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 0 16px;
+}
+
+.nback-timer-fill {
+  height: 100%;
+  background: currentColor;
+  /* No CSS transition on purpose: useCountdownFraction already updates this
+     width every animation frame (~60fps), which is smooth on its own. A CSS
+     transition on top of per-frame updates means each new width retriggers
+     a fresh transition before the last one finishes, so the rendered bar
+     perpetually lags behind the real elapsed time instead of tracking it —
+     this was tried once and looked broken (bar stutters, never quite
+     reaches empty), so don't reintroduce it.
+  */
+}
+
+.nback-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0;
+  opacity: 0.85;
+}
+
+.nback-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .nback-feedback {
