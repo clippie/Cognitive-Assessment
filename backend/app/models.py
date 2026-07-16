@@ -34,6 +34,17 @@ class ErrorType(str, enum.Enum):
     NONE = "none"
 
 
+class TimeZone(str, enum.Enum):
+    # Fixed US timezone abbreviations rather than IANA names (e.g. "America/Chicago")
+    # or a UTC offset: the model only needs to know which of the 4 continental US
+    # zones a session was logged in, not DST-aware absolute offsets, and abbreviations
+    # are what the self-reporting UI shows the user.
+    EST = "EST"
+    CST = "CST"
+    MST = "MST"
+    PST = "PST"
+
+
 class Session(Base):
     __tablename__ = "sessions"
     __table_args__ = (
@@ -54,8 +65,13 @@ class Session(Base):
     context_tag: Mapped[ContextTag] = mapped_column(SAEnum(ContextTag, name="contexttag", values_callable=lambda e: [x.value for x in e]), nullable=False)
     kss_pre: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     kss_post: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    sleep_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    hours_since_waking: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    # Both mandatory as of the 0002 migration: sleep_hours and hours_since_waking are
+    # first-class predictive features for the fatigue model, not incidental context,
+    # so an incomplete session is treated the same as a missing KSS/context_tag rather
+    # than silently accepted with a NULL feature.
+    sleep_hours: Mapped[float] = mapped_column(Float, nullable=False)
+    hours_since_waking: Mapped[float] = mapped_column(Float, nullable=False)
+    timezone: Mapped[TimeZone] = mapped_column(SAEnum(TimeZone, name="usertimezone", values_callable=lambda e: [x.value for x in e]), nullable=False)
 
     trials: Mapped[list["Trial"]] = relationship(
         "Trial", back_populates="session", cascade="all, delete-orphan"

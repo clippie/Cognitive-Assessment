@@ -1,39 +1,67 @@
 import { useState } from "react";
-import type { ContextTag } from "../types/session";
+import type { ContextTag, TimeZone } from "../types/session";
 import { KssRating } from "./KssRating";
+import { CheckboxGroup, type CheckboxOption } from "./CheckboxGroup";
+import { HoursSlider } from "./HoursSlider";
 
 export interface SessionSetupValues {
   user_id: string;
   context_tag: ContextTag;
   kss_pre: number;
-  sleep_hours: number | null;
-  hours_since_waking: number | null;
+  sleep_hours: number;
+  hours_since_waking: number;
+  timezone: TimeZone;
 }
 
 interface SessionSetupFormProps {
   onSubmit: (values: SessionSetupValues) => void;
 }
 
-const CONTEXT_TAGS: ContextTag[] = ["morning", "pre_work", "post_work", "pre_sleep", "other"];
+const CONTEXT_TAG_OPTIONS: CheckboxOption<ContextTag>[] = [
+  { value: "morning", label: "Morning" },
+  { value: "pre_work", label: "Pre-work" },
+  { value: "post_work", label: "Post-work" },
+  { value: "pre_sleep", label: "Pre-sleep" },
+  { value: "other", label: "Other" },
+];
+
+const TIME_ZONE_OPTIONS: CheckboxOption<TimeZone>[] = [
+  { value: "EST", label: "EST" },
+  { value: "CST", label: "CST" },
+  { value: "MST", label: "MST" },
+  { value: "PST", label: "PST" },
+];
 
 export function SessionSetupForm({ onSubmit }: SessionSetupFormProps) {
   const [userId, setUserId] = useState("");
-  const [contextTag, setContextTag] = useState<ContextTag>("morning");
+  const [contextTag, setContextTag] = useState<ContextTag | null>(null);
   const [kssPre, setKssPre] = useState<number | null>(null);
-  const [sleepHours, setSleepHours] = useState("");
-  const [hoursSinceWaking, setHoursSinceWaking] = useState("");
+  // Sliders default to 0, which is a legitimate value (e.g. "just woke up" for
+  // hours_since_waking) — so 0 can't double as "untouched." Per project decision,
+  // a slider left at 0 is treated as not yet answered and blocks submission,
+  // same as the unchecked context/timezone groups below.
+  const [sleepHours, setSleepHours] = useState(0);
+  const [hoursSinceWaking, setHoursSinceWaking] = useState(0);
+  const [timezone, setTimezone] = useState<TimeZone | null>(null);
 
-  const canSubmit = userId.trim().length > 0 && kssPre !== null;
+  const canSubmit =
+    userId.trim().length > 0 &&
+    contextTag !== null &&
+    kssPre !== null &&
+    sleepHours !== 0 &&
+    hoursSinceWaking !== 0 &&
+    timezone !== null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit || kssPre === null) return;
+    if (!canSubmit || contextTag === null || kssPre === null || timezone === null) return;
     onSubmit({
       user_id: userId.trim(),
       context_tag: contextTag,
       kss_pre: kssPre,
-      sleep_hours: sleepHours === "" ? null : Number(sleepHours),
-      hours_since_waking: hoursSinceWaking === "" ? null : Number(hoursSinceWaking),
+      sleep_hours: sleepHours,
+      hours_since_waking: hoursSinceWaking,
+      timezone,
     });
   }
 
@@ -46,40 +74,13 @@ export function SessionSetupForm({ onSubmit }: SessionSetupFormProps) {
         <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="e.g. caden" required />
       </label>
 
-      <label>
-        Context
-        <select value={contextTag} onChange={(e) => setContextTag(e.target.value as ContextTag)}>
-          {CONTEXT_TAGS.map((tag) => (
-            <option key={tag} value={tag}>
-              {tag}
-            </option>
-          ))}
-        </select>
-      </label>
+      <CheckboxGroup legend="Context" options={CONTEXT_TAG_OPTIONS} value={contextTag} onChange={setContextTag} />
 
-      <label>
-        Hours of sleep last night (optional)
-        <input
-          type="number"
-          min="0"
-          max="24"
-          step="0.5"
-          value={sleepHours}
-          onChange={(e) => setSleepHours(e.target.value)}
-        />
-      </label>
+      <HoursSlider label="Hours of sleep last night" value={sleepHours} onChange={setSleepHours} />
 
-      <label>
-        Hours since waking (optional)
-        <input
-          type="number"
-          min="0"
-          max="24"
-          step="0.5"
-          value={hoursSinceWaking}
-          onChange={(e) => setHoursSinceWaking(e.target.value)}
-        />
-      </label>
+      <HoursSlider label="Hours since waking" value={hoursSinceWaking} onChange={setHoursSinceWaking} />
+
+      <CheckboxGroup legend="Time zone" options={TIME_ZONE_OPTIONS} value={timezone} onChange={setTimezone} />
 
       <KssRating label="Sleepiness right now (1 = alert, 9 = fighting sleep)" value={kssPre} onChange={setKssPre} />
 

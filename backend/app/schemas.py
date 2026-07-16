@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.models import ContextTag, ErrorType, TaskType
+from app.models import ContextTag, ErrorType, TaskType, TimeZone
 
 
 class TrialCreate(BaseModel):
@@ -29,8 +29,9 @@ class SessionCreate(BaseModel):
     context_tag: ContextTag
     kss_pre: Optional[int] = Field(None, ge=1, le=9)
     kss_post: Optional[int] = Field(None, ge=1, le=9)
-    sleep_hours: Optional[float] = Field(None, ge=0)
-    hours_since_waking: Optional[float] = Field(None, ge=0)
+    sleep_hours: float = Field(ge=0)
+    hours_since_waking: float = Field(ge=0)
+    timezone: TimeZone
     trials: list[TrialCreate] = Field(min_length=1)
 
 
@@ -52,8 +53,9 @@ class SessionResponse(BaseModel):
     context_tag: ContextTag
     kss_pre: Optional[int]
     kss_post: Optional[int]
-    sleep_hours: Optional[float]
-    hours_since_waking: Optional[float]
+    sleep_hours: float
+    hours_since_waking: float
+    timezone: TimeZone
     trials: list[TrialResponse]
 
     model_config = {"from_attributes": True}

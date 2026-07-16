@@ -56,6 +56,51 @@ select {
   outline: 2px solid currentColor;
 }
 
+.checkbox-group {
+  border: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: auto;
+  margin-bottom: 0;
+}
+
+.checkbox-option input {
+  display: inline-block;
+  width: auto;
+  margin-top: 0;
+}
+
+.hours-slider {
+  margin-bottom: 16px;
+}
+
+.hours-slider-label {
+  display: block;
+}
+
+.hours-slider-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+}
+
+.hours-slider input[type="range"] {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .pvt-screen {
   text-align: center;
 }

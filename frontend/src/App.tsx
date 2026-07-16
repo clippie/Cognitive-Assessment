@@ -54,6 +54,7 @@ export default function App() {
         kss_post: kssPost,
         sleep_hours: setupValues.sleep_hours,
         hours_since_waking: setupValues.hours_since_waking,
+        timezone: setupValues.timezone,
         trials,
       });
       setSubmitStatus("success");

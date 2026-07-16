@@ -6,6 +6,8 @@ export type ContextTag = "morning" | "pre_work" | "post_work" | "pre_sleep" | "o
 
 export type TaskType = "pvt" | "nback" | "stroop";
 
+export type TimeZone = "EST" | "CST" | "MST" | "PST";
+
 // "none" = incorrect trial with no further error classification (e.g. a PVT
 // non-response). Distinct from omitting error_type entirely, which means the
 // trial was correct and the field doesn't apply.
@@ -25,8 +27,9 @@ export interface SessionCreate {
   context_tag: ContextTag;
   kss_pre: number | null;
   kss_post: number | null;
-  sleep_hours: number | null;
-  hours_since_waking: number | null;
+  sleep_hours: number;
+  hours_since_waking: number;
+  timezone: TimeZone;
   trials: TrialCreate[];
 }
 
@@ -46,7 +49,8 @@ export interface SessionResponse {
   context_tag: ContextTag;
   kss_pre: number | null;
   kss_post: number | null;
-  sleep_hours: number | null;
-  hours_since_waking: number | null;
+  sleep_hours: number;
+  hours_since_waking: number;
+  timezone: TimeZone;
   trials: TrialResponse[];
 }
