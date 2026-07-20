@@ -36,6 +36,7 @@ def create_session(payload: SessionCreate, db: DBSession = Depends(get_db)) -> S
         kss_post=payload.kss_post,
         sleep_hours=payload.sleep_hours,
         hours_since_waking=payload.hours_since_waking,
+        timezone=payload.timezone,
     )
     db.add(session)
     # Flush to generate session_id (via DB default) before attaching trials.
