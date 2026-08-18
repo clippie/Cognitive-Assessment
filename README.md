@@ -1,12 +1,20 @@
 # Cognitive Assessment Platform
 
-A self-contained web platform that measures cognitive fatigue through short, validated behavioral tasks rather than self-report alone. Users complete brief cognitive assessments several times a day; the resulting trial-level behavioral data (reaction time, accuracy, error type) plus self-reported sleepiness is intended to feed a PyTorch model that predicts a personalized fatigue score, explained to the user through an LLM-generated, research-grounded readout.
+
+I am building a platform that measures cognitive fatigue through behavioral tasks (Psychomotor Vigilance, N-back, Stroop) rather than self-report fatigue alone. I am currently in the data collection phase of this project, by self-testing 2-3 times a day to build a personalized real dataset. All three task interfaces and the full data pipeline are live. In the next phase, I will train a transformer (PyTorch) over trial sequences to predict a fatigue score, paired with a RAG-grounded LLM layer that explains results against published sleep-science research.
 
 > **This is a portfolio research project, not a medical or diagnostic tool.**
 
 ## Status
 
-**Phase 1 (data collection) — in progress.** The full three-task assessment (PVT, N-back, Stroop) is built, end-to-end verified, and deployed against a live production database. I'm currently the only participant, self-testing 3-4x/day to build the longitudinal dataset the modeling phase depends on. The PyTorch model and LLM readout layer (Phase 3+) haven't been built yet — see [Project_Management.md](Project_Management.md) for the full roadmap and decision log.
+**Phase 1: Create tasks and data pipeline — Completed** 
+Build the full three-task assessment (PVT, N-back, Stroop), end-to-end verified, and deployed against a live production database. Using React for the frontend, FastAPI for the backend, and Supabase for the dev and prod databases.
+
+**Phase 2: Data collection — In Progress** 
+I'm currently the only participant, self-testing 2-3x/day to build the longitudinal dataset the modeling phase depends on. 
+
+**Phase 3: Train model and create RAG LLM layer — Coming Soon** 
+The PyTorch model and LLM readout layer haven't been built yet — see [Project_Management.md](Project_Management.md) for the full roadmap and decision log.
 
 ## Why this project
 
@@ -46,10 +54,10 @@ Full session target: under 5 minutes, low enough friction to sustain multiple ti
 
 Full rationale for each of these lives as inline comments in the referenced file, plus the decision log in [Project_Management.md](Project_Management.md). Flagging the non-obvious ones here since they shape how the data should be interpreted:
 
-- **PVT is a speed task, not a correct/incorrect task.** Any on-time response is `accuracy: true` regardless of how slow — a "lapse" shows up in `reaction_time_ms`, not as an error. Only false starts and non-responses count as errors. (`frontend/src/tasks/pvt/pvtConfig.ts`)
-- **N-back uses two forced-choice keys (F = match, J = no match) on every trial**, not a respond-only-on-match design — otherwise a non-response is ambiguous between "correctly withheld" and "missed." Revised once already after self-testing surfaced a usability issue (see decision log): switched from flashed letters to a continuously visible word with a countdown bar. (`frontend/src/tasks/nback/nbackConfig.ts`)
-- **Stroop's response keys (D/F/J/K) are arbitrary, not first-letter mnemonics**, and shown as an always-visible legend — first-letter keys would let word-reading leak into the response itself, undermining the interference measure. (`frontend/src/tasks/stroop/stroopConfig.ts`)
-- **`context_tag` is self-tagged (morning / pre-work / post-work / pre-sleep), not derived from clock time** — this is meant to separate circadian fatigue from cognitive-exertion fatigue as distinct causal sources.
+- **PVT is a speed task, not a correct/incorrect task.** Any on-time response is `accuracy: true` regardless of how slow a "lapse" appears in `reaction_time_ms`, not treated as an error. Only false starts and non-responses count as errors. (`frontend/src/tasks/pvt/pvtConfig.ts`)
+- **N-back uses two forced-choice keys (F = match, J = no match) on every trial**, not a respond-only-on-match design; otherwise, a non-response is ambiguous between "correctly withheld" and "missed." Revised once already after self-testing surfaced a usability issue (see decision log): switched from flashed letters to a continuously visible word with a countdown bar. (`frontend/src/tasks/nback/nbackConfig.ts`)
+- **Stroop's response keys (D/F/J/K) are arbitrary, not first-letter mnemonics**, and shown as an always-visible legend; first-letter keys would let word-reading leak into the response itself, undermining the interference measure. (`frontend/src/tasks/stroop/stroopConfig.ts`)
+- **`context_tag` is self-tagged (morning / pre-work / post-work / pre-sleep), not derived from clock time.** This is meant to separate circadian fatigue from cognitive-exertion fatigue as distinct causal sources.
 - **Database constraints mirror application constraints, not the other way around.** `error_type` is only valid when `accuracy = false` (enforced by a Postgres `CHECK` constraint *and* a Pydantic validator), and `context_tag`/`task_type`/`error_type` are real DB-level enums, not free-text columns trusted to the app layer.
 
 ## Tech stack
@@ -140,14 +148,14 @@ Project_Management.md   Full design rationale, phase roadmap, decision log
 
 ## Verification approach
 
-Each task was verified end-to-end with scripted Playwright runs against an isolated backend/frontend/dev-DB instance before being trusted with real data — covering the happy path, forced timeouts, false starts, and (for Stroop) both interference and random error branches — with test sessions cascade-deleted afterward. See the decision log in `Project_Management.md` for specifics per task.
+Each task was verified end-to-end with scripted Playwright runs against an isolated backend/frontend/dev-DB instance before being trusted with real data. This covers the happy path, forced timeouts, false starts, and (for Stroop) both interference and random error branches, with test sessions cascade-deleted afterward. See the decision log in `Project_Management.md` for specifics per task.
 
 ## Ethics & privacy
 
 - This is a self-testing research project; I am currently the only participant.
-- Explicit, repeated disclaimer: not a medical or diagnostic tool — a fatigue *score* here is a research construct, not a clinical measure.
-- Should this ever extend to other participants, informed consent and a data-use disclosure would be required before collecting a single session — no exceptions.
+- Explicit, repeated disclaimer: not a medical or diagnostic tool. A fatigue *score* here is a research construct, not a clinical measure.
+- Should this ever extend to other participants, informed consent and a data-use disclosure would be required before collecting a single session.
 
 ## A note on AI-assisted development
 
-AI assistance was used for scaffolding and boilerplate (CRUD endpoints, migration files, config). Every schema constraint, task protocol parameter, and modeling/architecture decision is mine, documented inline where non-obvious, and I can walk through the reasoning behind each one.
+AI assistance (Claude Code) was used for scaffolding and boilerplate (CRUD endpoints, migration files, config). Every schema constraint, task protocol parameter, and modeling/architecture decision is mine, documented inline where non-obvious, and I can walk through the reasoning behind each one.
