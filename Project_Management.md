@@ -22,7 +22,7 @@ Full session target: under 5 minutes, to keep friction low enough for repeated r
 ## Data
  
 ### Collection design
-- **Session frequency:** 4x/day - morning, pre-work, post-work, pre-sleep (self-tagged by context, not fixed clock time, to separate causal fatigue sources: circadian vs. cognitive-exertion fatigue)
+- **Session frequency:** 2-3x/day - morning, pre-work, post-work, pre-sleep (self-tagged by context, not fixed clock time, to separate causal fatigue sources: circadian vs. cognitive-exertion fatigue)
 - **Baseline calibration:** first 5 sessions per user establish an individual baseline; subsequent scoring measures deviation from that baseline rather than an absolute population score
 - **Weak label:** Karolinska Sleepiness Scale (KSS, 1–9) collected pre and post-session — a validated instrument, used as a noisy label rather than ground truth
 - **Additional self-report:** hours of sleep
@@ -57,7 +57,7 @@ trials
  
 ## Modeling
  
-### Baseline (build first)
+### Baseline
 Simple regression / gradient boosting (XGBoost) predicting KSS score or context_tag from aggregated trial features. Establishes that signal exists in the data before reaching for a more complex architecture, and gives a benchmark the transformer needs to beat.
  
 ### Primary model
@@ -105,10 +105,10 @@ Simple regression / gradient boosting (XGBoost) predicting KSS score or context_
   - PVT is modeled as a *speed* task, not a correct/incorrect task: any on-time response is `accuracy: true` no matter how slow — a "lapse" in PVT terms is read off `reaction_time_ms` downstream, not encoded as an error. Only two things count as an actual error: a false start (response before the stimulus appears, `error_type: "random"`) and a true non-response (`error_type: "none"`, mirroring the DB model's "incorrect trial, no further classification" semantics — PVT has no interference-error concept, that's Stroop-specific).
 - [x] End-to-end flow verified with a scripted headless-browser (Playwright) run against the local dev servers: deliberate false start, deliberate non-response timeout, and 18 timed responses all recorded with correct `accuracy`/`error_type`/`reaction_time_ms`; the resulting session round-tripped through the dev DB with correct values end to end; cascade delete re-confirmed by cleaning up the test session afterward (0 orphaned trials).
 - [x] Prod DB migrated: `alembic upgrade head` run against the prod Supabase project (was previously unmigrated — confirmed via `alembic current` showing no revision beforehand). Verified after migrating: `sessions`/`trials` tables, the `contexttag`/`tasktype`/`errortype` enums, all three check constraints, and the `pgvector` extension all present, matching dev exactly. No write+delete round-trip test was run against prod itself (unlike every dev verification in this log) — prod is meant to hold only real data from the start, so this was a schema-only check. `backend/.env`'s active `DATABASE_URL` now points at prod.
-- [ ] Begin real 3-4x/day self-testing data collection against the **prod** DB — schema is live, all three tasks are built; this is now ongoing usage, not a remaining build task.
+- [x] Begin real 2-3x/day self-testing data collection against the **prod** DB — underway; README updated to reflect actual cadence (originally targeted 3-4x/day, revised down after starting real usage).
 
 ### Phase 2 (started early) — N-back frontend, ahead of real data collection
-Decided to build the N-back and Stroop tasks *before* starting real 3-4x/day collection, reversing the original phase order. Reason: baseline calibration uses each user's first 5 sessions, and the eventual model treats a session as trials across all three tasks together — starting real collection with PVT-only would make the earliest (and calibration-critical) sessions a different shape than everything collected afterward, with no way to backfill. A few days of frontend work up front is cheaper than weeks of inconsistent baseline data later.
+Decided to build the N-back and Stroop tasks *before* starting real 2-3x/day collection, reversing the original phase order. Reason: baseline calibration uses each user's first 5 sessions, and the eventual model treats a session as trials across all three tasks together — starting real collection with PVT-only would make the earliest (and calibration-critical) sessions a different shape than everything collected afterward, with no way to backfill. A few days of frontend work up front is cheaper than weeks of inconsistent baseline data later.
 
 - [x] N-back frontend implemented (`frontend/src/tasks/nback/`): `nbackConfig.ts` (protocol constants + sequence generator), `useNbackTask.ts` (idle → stimulus → blank → finished reducer), `NbackTask.tsx`. Wired into `App.tsx` between PVT and the post-KSS/submit stage.
 - [x] N-back protocol parameters decided — not specified in this document's original draft, so recorded here for the record (full rationale as code comments in `frontend/src/tasks/nback/nbackConfig.ts`):

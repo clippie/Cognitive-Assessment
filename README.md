@@ -1,6 +1,5 @@
 # Cognitive Assessment Platform
 
-
 I am building a platform that measures cognitive fatigue through behavioral tasks (Psychomotor Vigilance, N-back, Stroop) rather than self-report fatigue alone. I am currently in the data collection phase of this project, by self-testing 2-3 times a day to build a personalized real dataset. All three task interfaces and the full data pipeline are live. In the next phase, I will train a transformer (PyTorch) over trial sequences to predict a fatigue score, paired with a RAG-grounded LLM layer that explains results against published sleep-science research.
 
 > **This is a portfolio research project, not a medical or diagnostic tool.**
@@ -54,7 +53,7 @@ Full session target: under 5 minutes, low enough friction to sustain multiple ti
 
 Full rationale for each of these lives as inline comments in the referenced file, plus the decision log in [Project_Management.md](Project_Management.md). Flagging the non-obvious ones here since they shape how the data should be interpreted:
 
-- **PVT is a speed task, not a correct/incorrect task.** Any on-time response is `accuracy: true` regardless of how slow a "lapse" appears in `reaction_time_ms`, not treated as an error. Only false starts and non-responses count as errors. (`frontend/src/tasks/pvt/pvtConfig.ts`)
+- **PVT is a speed task, not a correct/incorrect task.** Any on-time response is `accuracy: true`. No matter how slow the response was in `reaction_time_ms`, it is not treated as an error. Only false starts and non-responses count as errors. (`frontend/src/tasks/pvt/pvtConfig.ts`)
 - **N-back uses two forced-choice keys (F = match, J = no match) on every trial**, not a respond-only-on-match design; otherwise, a non-response is ambiguous between "correctly withheld" and "missed." Revised once already after self-testing surfaced a usability issue (see decision log): switched from flashed letters to a continuously visible word with a countdown bar. (`frontend/src/tasks/nback/nbackConfig.ts`)
 - **Stroop's response keys (D/F/J/K) are arbitrary, not first-letter mnemonics**, and shown as an always-visible legend; first-letter keys would let word-reading leak into the response itself, undermining the interference measure. (`frontend/src/tasks/stroop/stroopConfig.ts`)
 - **`context_tag` is self-tagged (morning / pre-work / post-work / pre-sleep), not derived from clock time.** This is meant to separate circadian fatigue from cognitive-exertion fatigue as distinct causal sources.

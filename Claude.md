@@ -38,7 +38,7 @@ This is a portfolio project. Code quality, clear commit history, and defensible 
 - [x] Verify schema in Supabase dashboard — confirm tables, enums, and constraints are present.
 - [x] Build minimal React PVT task page (client-side `performance.now()` timing) that POSTs to `/sessions`.
 - [x] Migrate the prod DB and point the app at it.
-- [ ] Begin collecting real data (3-4x/day personal sessions) — all three tasks are built and the prod DB is live; this is now just ongoing usage, not a coding task.
+- [x] Begin collecting real data (2-3x/day personal sessions) — all three tasks are built and the prod DB is live; data collection is now underway.
 
 ### Phase 2 (frontend tasks done, started ahead of real data collection)
 - [x] N-back task implementation in the frontend.
@@ -88,12 +88,12 @@ Design intent behind constraints (context for why, not just what):
 
 ## Environments
 
-- Separate `dev` and `prod` databases from the start (two Supabase projects is fine). Do not mix schema experiments into the dataset intended for real longitudinal collection — the `prod` DB is where my own real 3-4x/day usage data lives starting immediately.
+- Separate `dev` and `prod` databases from the start (two Supabase projects is fine). Do not mix schema experiments into the dataset intended for real longitudinal collection — the `prod` DB is where my own real 2-3x/day usage data lives starting immediately.
 - `.env` for local config, never committed. Provide a `.env.example` with placeholder values.
 
 ## Immediate task for this session
 
-All three tasks are built and verified, and the prod DB is migrated and live (`backend/.env`'s `DATABASE_URL` now points at prod). Nothing left to build for Phase 1 — just run the backend (`uvicorn app.main:app`) and frontend (`npm run dev` in `frontend/`) locally, or deploy, and start logging real 3-4x/day sessions.
+All three tasks are built and verified, the prod DB is migrated and live (`backend/.env`'s `DATABASE_URL` now points at prod), and real 2-3x/day self-testing data collection is underway. The public-facing `README.md` has also been polished for portfolio viewing. Nothing left to build for Phase 1 — this is now ongoing data collection, not a coding task.
 
 Non-obvious PVT protocol decisions made while building this (not fully specified in `Project_Management.md`, flagged per the policy above — review before trusting collected data, full rationale in `frontend/src/tasks/pvt/pvtConfig.ts`):
 - Fixed 20-trial count per session rather than a fixed wall-clock duration.
